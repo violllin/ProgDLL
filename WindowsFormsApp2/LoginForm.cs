@@ -8,10 +8,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace WindowsFormsApp2
 {
-    public partial class LoginForm: Form
+    public partial class LoginForm : Form
     {
         private AuthManager authManager;
         private bool capsLockPressed = false;
@@ -30,13 +32,17 @@ namespace WindowsFormsApp2
         private Label label2;
         private Button button1;
         private Button button2;
+        private StatusStrip statusStrip1;
         private TextBox textBox1;
+
+        private ToolStripStatusLabel capsLockStatusLabel;
 
         public LoginForm()
         {
             InitializeComponent();
-            authManager = new AuthManager(); 
-           
+            authManager = new AuthManager();
+            InitializeStatusBar();
+            SetupCapsLockDetection();
         }
 
         private void InitializeComponent()
@@ -52,6 +58,7 @@ namespace WindowsFormsApp2
             this.label2 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -107,7 +114,7 @@ namespace WindowsFormsApp2
             this.pictureBox1.TabIndex = 3;
             this.pictureBox1.TabStop = false;
             // 
-            // textBox4, name
+            // textBox4
             // 
             this.textBox4.Location = new System.Drawing.Point(282, 180);
             this.textBox4.Multiline = true;
@@ -115,14 +122,14 @@ namespace WindowsFormsApp2
             this.textBox4.Size = new System.Drawing.Size(400, 35);
             this.textBox4.TabIndex = 4;
             // 
-            // textBox5, password
+            // textBox5
             // 
             this.textBox5.Location = new System.Drawing.Point(282, 236);
             this.textBox5.Multiline = true;
             this.textBox5.Name = "textBox5";
+            this.textBox5.PasswordChar = '*';
             this.textBox5.Size = new System.Drawing.Size(400, 35);
             this.textBox5.TabIndex = 5;
-            this.textBox5.PasswordChar = '*';
             // 
             // label1
             // 
@@ -153,7 +160,7 @@ namespace WindowsFormsApp2
             this.button1.TabIndex = 8;
             this.button1.Text = "Вход";
             this.button1.UseVisualStyleBackColor = true;
-            button1.Click += LoginButton_Click;
+            this.button1.Click += new System.EventHandler(this.LoginButton_Click);
             // 
             // button2
             // 
@@ -164,12 +171,21 @@ namespace WindowsFormsApp2
             this.button2.TabIndex = 9;
             this.button2.Text = "Отмена";
             this.button2.UseVisualStyleBackColor = true;
-            button2.Click += (s, e) => this.Close();
+            this.button2.Click += new System.EventHandler(this.CancelButton_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Location = new System.Drawing.Point(0, 378);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(700, 22);
+            this.statusStrip1.TabIndex = 10;
+            this.statusStrip1.Text = "statusStrip1";
             // 
             // LoginForm
             // 
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.ClientSize = new System.Drawing.Size(700, 400);
+            this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
@@ -211,6 +227,53 @@ namespace WindowsFormsApp2
                 MessageBox.Show("Неверное имя пользователя или пароль", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
+        }
+
+        private string GetCurrentInputLanguage()
+        {
+            return InputLanguage.CurrentInputLanguage.Culture.DisplayName;
+        }
+
+        private void InitializeStatusBar()
+        {
+            statusStrip1 = new StatusStrip();
+
+            capsLockStatusLabel = new ToolStripStatusLabel
+            {
+                Text = "Caps Lock: " + (Control.IsKeyLocked(Keys.CapsLock) ? "ВКЛ" : "ВЫКЛ"),
+                Font = new Font("Calibri", 9, FontStyle.Bold),
+                ForeColor = Control.IsKeyLocked(Keys.CapsLock) ? Color.Red : Color.Black
+            };
+
+            statusStrip1.Items.Add(capsLockStatusLabel);
+            this.Controls.Add(statusStrip1);
+        }
+
+        private void SetupCapsLockDetection()
+        {
+            // Подписываемся на события клавиатуры для обоих полей ввода
+            textBox4.KeyDown += UpdateCapsLockStatus;
+            textBox4.KeyUp += UpdateCapsLockStatus;
+            textBox4.Enter += UpdateCapsLockStatus;
+
+            textBox5.KeyDown += UpdateCapsLockStatus;
+            textBox5.KeyUp += UpdateCapsLockStatus;
+            textBox5.Enter += UpdateCapsLockStatus;
+
+            this.KeyPreview = true;
+        }
+
+        private void UpdateCapsLockStatus(object sender, EventArgs e)
+        {
+            bool isCapsLockOn = Control.IsKeyLocked(Keys.CapsLock);
+            capsLockStatusLabel.Text = "Caps Lock: " + (isCapsLockOn ? "ВКЛ" : "ВЫКЛ");
+            capsLockStatusLabel.ForeColor = isCapsLockOn ? Color.Red : Color.Black;
         }
     }
 }
