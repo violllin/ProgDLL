@@ -10,7 +10,7 @@ namespace MenuApp
     {
         private AuthUser user;
         private MenuBuilder menuBuilder;
-        private MenuStrip menuStrip1; // Добавляем объявление menuStrip1
+        private MenuStrip menuStrip1; 
 
         public MainForm(AuthUser authenticatedUser)
         {
@@ -21,21 +21,17 @@ namespace MenuApp
 
         private void InitializeMainForm()
         {
-            // Настройка основной формы
             this.Text = "АИС Отдел кадров - Главное окно";
             this.WindowState = FormWindowState.Maximized;
             this.Size = new Size(800, 600);
 
-            // Инициализация меню
             menuStrip1 = new MenuStrip();
             this.Controls.Add(menuStrip1);
             this.MainMenuStrip = menuStrip1;
 
-            // Создание меню
             menuBuilder = new MenuBuilder("menu.txt", user);
             menuBuilder.BuildMenu(menuStrip1, MenuItem_Click);
 
-            // Создание статусной строки
             var statusStrip = new StatusStrip();
             var userStatusLabel = new ToolStripStatusLabel
             {
@@ -61,9 +57,6 @@ namespace MenuApp
         private void InitializeComponent()
         {
             this.SuspendLayout();
-            // 
-            // MainForm
-            // 
             this.ClientSize = new System.Drawing.Size(800, 600);
             this.Name = "MainForm";
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -72,7 +65,6 @@ namespace MenuApp
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // Дополнительная инициализация при загрузке формы
         }
     }
 }
