@@ -49,7 +49,7 @@ namespace MenuDLL
                 if (currentUser != null && currentUser.MenuPermissions.ContainsKey(text))
                 {
                     int status = currentUser.MenuPermissions[text];
-                    if (status == 2) continue; // Skip if hidden
+                    if (status == 2) continue; 
                 }
 
                 if (level == 0)
