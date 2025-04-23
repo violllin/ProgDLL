@@ -46,7 +46,6 @@ namespace MenuDLL
 
                 var item = new MenuItem { Level = level, Text = text, MethodName = method };
 
-                // Check user permissions
                 if (currentUser != null && currentUser.MenuPermissions.ContainsKey(text))
                 {
                     int status = currentUser.MenuPermissions[text];
