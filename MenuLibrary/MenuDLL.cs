@@ -1,5 +1,4 @@
-﻿// MenuDLL.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using AuthDLL;
@@ -85,7 +84,7 @@ namespace MenuDLL
                 if (currentUser != null && currentUser.MenuPermissions.ContainsKey(item.Text) &&
                     currentUser.MenuPermissions[item.Text] == 1)
                 {
-                    // Item is visible but disabled
+                  
                     var menuItem = new ToolStripMenuItem(item.Text) { Enabled = false };
                     parent.Add(menuItem);
                     if (item.Children.Count > 0)

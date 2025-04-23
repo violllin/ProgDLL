@@ -1,19 +1,20 @@
-﻿using AuthDLL;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 
-namespace WindowsFormsApp2
+namespace DllApp
 {
     public partial class LoginForm : Form
     {
-        private AuthManager authManager;
         private bool capsLockPressed = false;
         private TextBox usernameTextBox;
         private TextBox passwordTextBox;
         private Label capsLockLabel;
-
-        public AuthUser AuthenticatedUser { get; private set; }
 
         private TextBox textBox2;
         private TextBox textBox3;
@@ -26,14 +27,50 @@ namespace WindowsFormsApp2
         private Button button2;
         private TextBox textBox1;
 
+        private object _authService;
+        public LocalAuthUser AuthenticatedUser { get; private set; }
+
         private ToolStripStatusLabel capsLockStatusLabel;
 
         public LoginForm()
         {
             InitializeComponent();
-            authManager = new AuthManager();
             InitializeStatusBar();
             SetupCapsLockDetection();
+            LoadAuthService();
+        }
+
+        private void LoadAuthService()
+        {
+            try
+            {
+                string dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AuthLibrary.dll");
+
+                if (!File.Exists(dllPath))
+                {
+                    MessageBox.Show($"Файл AuthLibrary.dll не найден: {dllPath}");
+                    return;
+                }
+
+                Assembly assembly = Assembly.LoadFrom(dllPath);
+
+                // Правильное имя класса - AuthManager в namespace AuthDLL
+                Type authServiceType = assembly.GetType("AuthDLL.AuthManager");
+
+                if (authServiceType == null)
+                {
+                    // Диагностика: выводим все доступные типы
+                    string availableTypes = string.Join("\n", assembly.GetTypes().Select(t => t.FullName));
+                    MessageBox.Show($"AuthManager не найден. Доступные типы:\n{availableTypes}");
+                    return;
+                }
+
+                _authService = Activator.CreateInstance(authServiceType, "USERS.txt");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки AuthManager: {ex.Message}");
+            }
         }
 
         private void InitializeComponent()
@@ -95,6 +132,7 @@ namespace WindowsFormsApp2
             // 
             // pictureBox1
             // 
+            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
             this.pictureBox1.InitialImage = ((System.Drawing.Image)(resources.GetObject("pictureBox1.InitialImage")));
             this.pictureBox1.Location = new System.Drawing.Point(35, 12);
             this.pictureBox1.Name = "pictureBox1";
@@ -195,17 +233,45 @@ namespace WindowsFormsApp2
                 return;
             }
 
-            AuthenticatedUser = authManager.Authenticate(username, password);
-
-            if (AuthenticatedUser != null)
+            // Проверка инициализации сервиса
+            if (_authService == null)
             {
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-            else
-            {
-                MessageBox.Show("Неверное имя пользователя или пароль", "Ошибка",
+                MessageBox.Show("Ошибка инициализации системы аутентификации", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+                Type authServiceType = _authService.GetType();
+                MethodInfo authenticateMethod = authServiceType.GetMethod("Authenticate");
+
+                object user = authenticateMethod.Invoke(_authService, new object[] { username, password });
+
+                if (user != null)
+                {
+                    Type userType = user.GetType();
+
+                    PropertyInfo permissionsProp = userType.GetProperty("MenuPermissions");
+
+                    AuthenticatedUser = new LocalAuthUser
+                    {
+                        Username = username,
+                        Password = password,
+                        MenuPermissions = (Dictionary<string, int>)permissionsProp.GetValue(user)
+                    };
+
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Неверные учетные данные");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Ошибка аутентификации: {ex.Message}");
             }
         }
 

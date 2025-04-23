@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Windows.Forms;
-using WindowsFormsApp2;
 
-namespace MenuApp
+namespace DllApp
 {
     static class Program
     {
+        /// <summary>
+        /// Главная точка входа для приложения.
+        /// </summary>
         [STAThread]
         static void Main()
         {
